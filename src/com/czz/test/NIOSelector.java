@@ -28,13 +28,13 @@ public class NIOSelector {
             //创建socket通道
             SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress("127.0.0.1",8898));
 
-            FileChannel fileChannel = FileChannel.open(Paths.get("D:\\relation.xlsx"), StandardOpenOption.READ);
+            FileChannel fileChannel = FileChannel.open(Paths.get("D:\\relation.xlsx"), StandardOpenOption.READ, StandardOpenOption.WRITE);
 
             ByteBuffer buffer = ByteBuffer.allocate(1024*1024);
 
-            while (fileChannel.write(buffer) != -1){
+            while (fileChannel.read(buffer) != -1){
                 buffer.flip();
-                socketChannel.read(buffer);
+                socketChannel.write(buffer);
                 buffer.clear();
             }
 
@@ -63,7 +63,7 @@ class Server {
         //SelectionKeyOP_READ = 1 可读入状态
 
         //就绪状态
-        SelectionKey register = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
         //1、轮训地获取选择器上已“就绪”的事件--->只要select()>0，说明已就绪
         while (selector.select()>0){
@@ -88,6 +88,7 @@ class Server {
                     ByteBuffer buffer = ByteBuffer.allocate(1024*1024);
                     //4.3读取
                     while (channel.read(buffer) != -1){
+                        buffer.flip();
                         fileChannel.write(buffer);
                         buffer.clear();
                     }
